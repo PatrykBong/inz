@@ -237,6 +237,7 @@ class AdminController extends Controller
             ['&quot;','<','>']);
         $ms = sizeof($message);
         $m = "Brak zapisanych wyników";
+        
         for($i=0;$i<$ms;$i++){
             if (preg_match('/^audio/', $message[$i])){ //https://www.skysports.com/premier-league-scores-fixtures
                 $mod = substr($message[$i], 17);
@@ -299,9 +300,10 @@ class AdminController extends Controller
                 if(is_array($message[$i])){
                     if($game->name1 == $message[$i][0] && $game->name2 == $message[$i][2] && $game->date == $message[$i-1]){
                         $m = "Pomyślnie zapisano wyniki";
-                        DB::table('game')
-                            ->where('id', $game->id)
-                            ->update(['result' => $message[$i][1], 'date' => $message[$i-1]]);
+                        //DB::table('game')
+                        //    ->where('id', $game->id)
+                        //    ->update(['result' => $message[$i][1], 'date' => $message[$i-1]]);
+                        $this->addPoints($game->id,2,$message[$i][1]);
                     }
                 }
             }
@@ -463,8 +465,56 @@ class AdminController extends Controller
         return redirect()->back()->with('success', 'Drużyna została usunięta z turnieju.');
     }
 
-    public function moje(){
+    public function addPoints($id_game, $id_tournament, $result){
+        $rooms = DB::table('room')
+                    ->where('tournament_id',$id_tournament)
+                    ->get();
 
+        foreach($rooms as $room){
+            $users = DB::table('role_user')
+                        ->where('role_user.room_id',$room->id)
+                        ->where('role_id',2)
+                        ->get();
+            foreach($users as $user){
+                $bet = DB::table('bet')
+                        ->where('room_id',$room->id)
+                        ->where('user_id',$user->user_id)
+                        ->where('game_id',$id_game)
+                        ->first();
+                if(!is_null($bet)){
+                    if($bet->bet == $result){
+                        DB::table('role_user')
+                            ->where('user_id', $user->user_id)
+                            ->where('room_id', $room->id)
+                            ->where('role_id', 2)
+                            ->increment('points',3);
+                    }else{
+                        list($li01, $li02) = explode('-', $bet->bet);
+                        list($li11, $li12) = explode('-', $result);
+                        if($li01 == $li02 && $li11 == $li12){
+                            DB::table('role_user')
+                            ->where('user_id', $user->user_id)
+                            ->where('room_id', $room->id)
+                            ->where('role_id', 2)
+                            ->increment('points',1);
+                        }elseif($li01 > $li02 && $li11 > $li12){
+                            DB::table('role_user')
+                            ->where('user_id', $user->user_id)
+                            ->where('room_id', $room->id)
+                            ->where('role_id', 2)
+                            ->increment('points',1);
+                        }elseif($li01 < $li02 && $li11 < $li12){
+                            DB::table('role_user')
+                            ->where('user_id', $user->user_id)
+                            ->where('room_id', $room->id)
+                            ->where('role_id', 2)
+                            ->increment('points',1);
+                        }
+                    }
+                }
+                //$bet = null;
+            }
+        }
     }
 }
 
