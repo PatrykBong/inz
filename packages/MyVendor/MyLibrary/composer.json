@@ -1,0 +1,13 @@
+{
+    "name": "myvendor/mylibrary",
+    "description": "Opis Twojej biblioteki",
+    "type": "library",
+    "require": {
+        "php": ">=8.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "MyVendor\\MyLibrary\\": "src/"
+        }
+    }
+}
