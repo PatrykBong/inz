@@ -366,7 +366,7 @@ class AdminController extends Controller
             $message2[$j] = [$t1, $t2, $date];
             $j++;**/
         }
-        return $message;
+        
         for($i=0;$i<$ms;$i++){
             if (is_array($message[$i])){
                 $team1 = Team::where("code",$message[$i][0])->first();
